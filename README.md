@@ -1,8 +1,6 @@
 # newpy
 
-Simple Python project scaffolder. Creates a project with venv, main.py, .gitignore, requirements.txt and optional git.
-
-No dependencies.
+Creates a Python project folder with `.venv`.
 
 ## Install
 
@@ -10,19 +8,13 @@ No dependencies.
 curl -sSL https://raw.githubusercontent.com/benrialamounir/newpy/main/install.sh | bash
 ```
 
-or
-
-```bash
-curl -sSL https://raw.githubusercontent.com/benrialamounir/newpy/main/newpy.py -o newpy
-chmod +x newpy
-mv newpy ~/.local/bin/
-```
-
 ## Usage
 
 ```bash
 newpy
 ```
+
+Tab switches next/cancel. Left/right moves in the text. Up/down do nothing.
 
 ## License
 
