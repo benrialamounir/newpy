@@ -6,11 +6,24 @@ import subprocess
 import shutil
 import re
 import textwrap
-import platform
+import termios
+import tty
 from pathlib import Path
 
 def clear():
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("clear")
+
+def getch():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        ch = sys.stdin.read(1)
+        if ch == "\x1b":
+            ch += sys.stdin.read(2)
+        return ch
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 def ask(text, default=""):
     if default:
@@ -25,19 +38,32 @@ def ask(text, default=""):
         print("cannot be empty")
 
 def yesno(text, default=True):
-    if default:
-        s = " [Y/n]"
-    else:
-        s = " [y/N]"
+    options = ["yes", "no"]
+    idx = 0 if default else 1
     while True:
-        ans = input(f"{text}{s}: ").strip().lower()
-        if not ans:
-            return default
-        if ans in ("y", "yes"):
+        sys.stdout.write("\r\033[K")
+        parts = []
+        for i, opt in enumerate(options):
+            if i == idx:
+                parts.append(f"[{opt}]")
+            else:
+                parts.append(f" {opt} ")
+        sys.stdout.write(f"{text}  {'  '.join(parts)}   (tab/arrows, enter)")
+        sys.stdout.flush()
+        key = getch()
+        if key in ("\t", "\x1b[C", "\x1b[D", "\x1b[A", "\x1b[B"):
+            idx = 1 - idx
+        elif key in ("\r", "\n"):
+            sys.stdout.write("\n")
+            return idx == 0
+        elif key.lower() == "y":
+            sys.stdout.write("\n")
             return True
-        if ans in ("n", "no"):
+        elif key.lower() == "n":
+            sys.stdout.write("\n")
             return False
-        print("type y or n")
+        elif key == "\x03":
+            raise KeyboardInterrupt
 
 def main():
     try:
@@ -168,10 +194,7 @@ def main():
         print()
         print("quick start:")
         print(f"  cd {path}")
-        if platform.system() == "Windows":
-            print(r"  .venv\Scripts\activate")
-        else:
-            print("  source .venv/bin/activate")
+        print("  source .venv/bin/activate")
         print("  python main.py")
         print()
         input("press enter to exit")
